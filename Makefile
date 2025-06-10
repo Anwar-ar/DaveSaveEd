@@ -112,26 +112,26 @@ $(TARGET): $(ALL_OBJS) $(BIN_DIR) $(RES_FILE)
     $(LINK) $(LFLAGS) $(ALL_OBJS) $(RES_FILE) $(LIB_PATHS) $(LIBS) /OUT:$@
 
 # Rule to compile DaveSaveEd.cpp into an object file.
-# Dependencies: Source file and relevant headers.
-$(DAVESAVEED_OBJ): $(DAVESAVEED_SRC) DaveSaveEd.h Logger.h SaveGameManager.h resource.h # Add resource.h as a dependency
+# Dependencies: The binary directory, Source file and relevant headers.
+$(DAVESAVEED_OBJ): $(BIN_DIR) $(DAVESAVEED_SRC) DaveSaveEd.h Logger.h SaveGameManager.h resource.h # Add resource.h as a dependency
     @echo Compiling $(DAVESAVEED_SRC)...
     $(CC) $(CFLAGS) $(INCLUDE_PATHS) /c $(DAVESAVEED_SRC) /Fo$@
 
 # Rule to compile sqlite3.c into an object file.
-# Dependencies: SQLite source file.
-$(SQLITE_OBJ): $(SQLITE_SRC)
+# Dependencies: The binary directory, SQLite source file.
+$(SQLITE_OBJ): $(BIN_DIR) $(SQLITE_SRC)
     @echo Compiling $(SQLITE_SRC)...
     $(CC) $(CFLAGS) $(INCLUDE_PATHS) /c $(SQLITE_SRC) /Fo$@
 
 # Rule to compile Logger.cpp into an object file.
-# Dependencies: Logger source file and its headers.
-$(LOGGER_OBJ): $(LOGGER_SRC) Logger.h DaveSaveEd.h
+# Dependencies: The binary directory, Logger source file and its headers.
+$(LOGGER_OBJ): $(BIN_DIR) $(LOGGER_SRC) Logger.h DaveSaveEd.h
     @echo Compiling $(LOGGER_SRC)...
     $(CC) $(CFLAGS) $(INCLUDE_PATHS) /c $(LOGGER_SRC) /Fo$@
 
 # Rule to compile SaveGameManager.cpp into an object file.
-# Dependencies: SaveGameManager source file and its headers.
-$(SAVEMGR_OBJ): $(SAVEMGR_SRC) SaveGameManager.h DaveSaveEd.h Logger.h
+# Dependencies: The binary directory, SaveGameManager source file and its headers.
+$(SAVEMGR_OBJ): $(BIN_DIR) $(SAVEMGR_SRC) SaveGameManager.h DaveSaveEd.h Logger.h
     @echo Compiling $(SAVEMGR_SRC)...
     $(CC) $(CFLAGS) $(INCLUDE_PATHS) /c $(SAVEMGR_SRC) /Fo$@
 
@@ -179,4 +179,5 @@ release: clean build $(BIN_DIR)
     @echo You can now upload "$(RELEASE_ZIP)" to your GitHub Releases page.
 
 #END OF MAKEFILE
+
 
