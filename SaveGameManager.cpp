@@ -418,8 +418,8 @@ void SaveGameManager::MaxAllIngredients(sqlite3* db) {
     }
     nlohmann::json& ingredients_json_map = m_saveData["Ingredients"];
 
-    std::string default_lastGainTime = "01/01/2000 00:00:00";
-    std::string default_lastGainGameTime = "01/01/2000 00:00:00";
+    std::string default_lastGainTime = "04/01/2025 12:34:56";
+    std::string default_lastGainGameTime = "10/03/2022 08:30:52";
     if (!ingredients_json_map.empty()) {
         for (auto it = ingredients_json_map.begin(); it != ingredients_json_map.end(); ++it) {
             if (it.value().contains("lastGainTime") && it.value()["lastGainTime"].is_string()) {
@@ -444,9 +444,7 @@ void SaveGameManager::MaxAllIngredients(sqlite3* db) {
         JOIN
             Items AS T
         ON
-            I.TID = T.ItemDataID
-        WHERE
-            I.Type IN (0, 3);
+            I.TID = T.ItemDataID;
     )";
 
     char* zErrMsg = nullptr;
