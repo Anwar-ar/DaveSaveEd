@@ -1,0 +1,6 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+// Icon with unique ID and filename (replace "appicon.ico" with your actual icon file name)
+IDI_APPICON             ICON                    "appicon.ico"
