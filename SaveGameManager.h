@@ -51,12 +51,14 @@ public:
     long long GetGold() const;
     long long GetBei() const;
     long long GetArtisansFlame() const;
+    long long GetFollowerCount() const;
     bool IsSaveFileLoaded() const { return m_isSaveFileLoaded; }
 
     // Player Stats Setters
     void SetGold(long long value);
     void SetBei(long long value);
     void SetArtisansFlame(long long value);
+    void SetFollowerCount(long long value);
 
     // Ingredient Modification Functions (these are new or will be expanded)
     void MaxOwnIngredients(sqlite3* db); // Needs access to the database

@@ -278,6 +278,14 @@ long long SaveGameManager::GetArtisansFlame() const {
     return 0;
 }
 
+long long SaveGameManager::GetFollowerCount() const {
+    if (m_isSaveFileLoaded && m_saveData.contains("SNSInfo") && m_saveData["SNSInfo"].is_object() && m_saveData["SNSInfo"].contains("m_Follow_Count")) {
+        return m_saveData["SNSInfo"]["m_Follow_Count"].get<long long>();
+    }
+    return 0;
+}
+
+
 // --- Player Stats Setters ---
 void SaveGameManager::SetGold(long long value) {
     if (m_isSaveFileLoaded && m_saveData.contains("PlayerInfo") && m_saveData["PlayerInfo"].is_object()) {
@@ -305,6 +313,16 @@ void SaveGameManager::SetArtisansFlame(long long value) {
         LogMessage(LOG_WARNING_LEVEL, "Attempted to set artisan's flame, but PlayerInfo section not found or invalid.");
     }
 }
+
+void SaveGameManager::SetFollowerCount(long long value) {
+    if (m_isSaveFileLoaded && m_saveData.contains("SNSInfo") && m_saveData["SNSInfo"].is_object()) {
+        m_saveData["SNSInfo"]["m_Follow_Count"] = value;
+        LogMessage(LOG_INFO_LEVEL, ("Follower count set to: " + std::to_string(m_saveData["SNSInfo"]["m_Follow_Count"].get<long long>())).c_str());
+    } else {
+        LogMessage(LOG_WARNING_LEVEL, "Attempted to set follower count, but SNSInfo section not found or invalid.");
+    }
+}
+
 
 // Helper function to determine the target count based on the item's MaxCount from DB
 static int GetDesiredMaxCountForTier(int item_db_max_count) {
@@ -416,19 +434,20 @@ void SaveGameManager::MaxAllIngredients(sqlite3* db) {
         LogMessage(LOG_INFO_LEVEL, "Creating empty 'Ingredients' section in save data.");
         m_saveData["Ingredients"] = nlohmann::json::object();
     }
+
     nlohmann::json& ingredients_json_map = m_saveData["Ingredients"];
 
     std::string default_lastGainTime = "04/01/2025 12:34:56";
     std::string default_lastGainGameTime = "10/03/2022 08:30:52";
+
+    // If the ingredient map isn't empty, try to get a timestamp from the first entry.
     if (!ingredients_json_map.empty()) {
-        for (auto it = ingredients_json_map.begin(); it != ingredients_json_map.end(); ++it) {
-            if (it.value().contains("lastGainTime") && it.value()["lastGainTime"].is_string()) {
-                default_lastGainTime = it.value()["lastGainTime"].get<std::string>();
-            }
-            if (it.value().contains("lastGainGameTime") && it.value()["lastGainGameTime"].is_string()) {
-                default_lastGainGameTime = it.value()["lastGainGameTime"].get<std::string>();
-            }
-            break;
+        auto& first_item_value = ingredients_json_map.begin().value();
+        if (first_item_value.contains("lastGainTime") && first_item_value["lastGainTime"].is_string()) {
+            default_lastGainTime = first_item_value["lastGainTime"].get<std::string>();
+        }
+        if (first_item_value.contains("lastGainGameTime") && first_item_value["lastGainGameTime"].is_string()) {
+            default_lastGainGameTime = first_item_value["lastGainGameTime"].get<std::string>();
         }
     }
     LogMessage(LOG_INFO_LEVEL, ("Using timestamps '" + default_lastGainTime + "' / '" + default_lastGainGameTime + "' for new ingredients.").c_str());
@@ -595,4 +614,5 @@ std::filesystem::path SaveGameManager::GetDefaultSaveGameDirectoryAndLatestFile(
 
     return steamIDPath;
 }
+
 

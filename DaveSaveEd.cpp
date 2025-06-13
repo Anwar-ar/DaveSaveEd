@@ -67,6 +67,10 @@
 #define IDC_STATIC_FLAME_VALUE      108
 #define IDC_BTN_MAX_FLAME           109
 
+#define IDC_STATIC_FOLLOWER_LABEL   114
+#define IDC_STATIC_FOLLOWER_VALUE   115
+#define IDC_BTN_MAX_FOLLOWER        116
+
 // Control IDs for ingredient-related UI elements.
 #define IDC_BTN_MAX_OWN_INGREDIENTS 110
 #define IDC_BTN_MAX_ALL_INGREDIENTS 111
@@ -82,6 +86,7 @@ HWND g_hDlg = NULL; // Handle to the main dialog window.
 HWND g_hStaticGoldValue = NULL;
 HWND g_hStaticBeiValue = NULL;
 HWND g_hStaticFlameValue = NULL;
+HWND g_hStaticFollowerValue = NULL;
 
 // --- Global SQLite Database Handle (for embedded reference DB) ---
 // This database stores reference data (e.g., ingredient lists) for the editor.
@@ -107,12 +112,14 @@ void UpdateCurrencyDisplay() {
     std::string gold_str = "";
     std::string bei_str = "";
     std::string flame_str = "";
+    std::string follower_str = "";
 
     // If a save file is loaded, retrieve and display the actual values.
     if (g_saveGameManager.IsSaveFileLoaded()) {
         gold_str = std::to_string(g_saveGameManager.GetGold());
         bei_str = std::to_string(g_saveGameManager.GetBei());
         flame_str = std::to_string(g_saveGameManager.GetArtisansFlame());
+        follower_str = std::to_string(g_saveGameManager.GetFollowerCount());
         LogMessage(LOG_INFO_LEVEL, "Currency display updated from SaveGameManager values.");
     } else {
         LogMessage(LOG_INFO_LEVEL, "No valid save data loaded. Displaying blank currency values.");
@@ -122,6 +129,7 @@ void UpdateCurrencyDisplay() {
     SetWindowTextA(g_hStaticGoldValue, gold_str.c_str());
     SetWindowTextA(g_hStaticBeiValue, bei_str.c_str());
     SetWindowTextA(g_hStaticFlameValue, flame_str.c_str());
+    SetWindowTextA(g_hStaticFollowerValue, follower_str.c_str());
 }
 
 // --- Entry Point: WinMain ---
@@ -170,7 +178,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         "DaveSaveEd",                       // NEW: Window title changed to "DaveSaveEd".
         WS_OVERLAPPEDWINDOW | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, // Window styles.
         CW_USEDEFAULT, CW_USEDEFAULT,       // Default position.
-        450, 300,                           // Initial size.
+        450, 340,                           // Initial size.
         NULL,                               // Parent window.
         NULL,                               // Menu handle.
         hInstance,                          // Application instance.
@@ -235,6 +243,7 @@ INT_PTR CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
             SetWindowTextA(g_hStaticGoldValue, "");
             SetWindowTextA(g_hStaticBeiValue, "");
             SetWindowTextA(g_hStaticFlameValue, "");
+            SetWindowTextA(g_hStaticFollowerValue, "");
 
             // --- Reference Database Initialization (from embedded_sql.h) ---
             // Opens an in-memory SQLite database and populates it from compressed SQL data.
@@ -324,7 +333,7 @@ INT_PTR CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
             int dialog_client_height = client_rect.bottom - client_rect.top;
 
             // Calculate total height needed for all UI blocks.
-            int total_currency_block_height = (control_height * 3) + (spacing_y * 2);
+            int total_currency_block_height = (control_height * 4) + (spacing_y * 3);
             int total_ingredient_block_height = control_height;
             int total_file_block_height = control_height + 5; // +5 for slight extra spacing.
 
@@ -361,13 +370,22 @@ INT_PTR CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
                 current_button_x, y_pos, currency_button_width, control_height, hDlg, (HMENU)IDC_BTN_MAX_BEI, GetModuleHandle(NULL), NULL);
             y_pos += control_height + spacing_y;
 
-            CreateWindowEx(WS_EX_TRANSPARENT, "STATIC", "Artisan's:", WS_CHILD | WS_VISIBLE,
+            CreateWindowEx(WS_EX_TRANSPARENT, "STATIC", "Artisan's Flame:", WS_CHILD | WS_VISIBLE,
                 current_label_x, y_pos, label_width, control_height, hDlg, (HMENU)IDC_STATIC_FLAME_LABEL, GetModuleHandle(NULL), NULL);
             g_hStaticFlameValue = CreateWindowEx(0, "STATIC", "", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_ENDELLIPSIS,
                 current_value_x, y_pos, value_width, control_height, hDlg, (HMENU)IDC_STATIC_FLAME_VALUE, GetModuleHandle(NULL), NULL);
             CreateWindowEx(0, "BUTTON", "Set to Max", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 current_button_x, y_pos, currency_button_width, control_height, hDlg, (HMENU)IDC_BTN_MAX_FLAME, GetModuleHandle(NULL), NULL);
+            y_pos += control_height + spacing_y;
+
+            CreateWindowEx(WS_EX_TRANSPARENT, "STATIC", "Follower Count:", WS_CHILD | WS_VISIBLE,
+                current_label_x, y_pos, label_width, control_height, hDlg, (HMENU)IDC_STATIC_FOLLOWER_LABEL, GetModuleHandle(NULL), NULL);
+            g_hStaticFollowerValue = CreateWindowEx(0, "STATIC", "", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_ENDELLIPSIS,
+                current_value_x, y_pos, value_width, control_height, hDlg, (HMENU)IDC_STATIC_FOLLOWER_VALUE, GetModuleHandle(NULL), NULL);
+            CreateWindowEx(0, "BUTTON", "Set to Max", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                current_button_x, y_pos, currency_button_width, control_height, hDlg, (HMENU)IDC_BTN_MAX_FOLLOWER, GetModuleHandle(NULL), NULL);
             y_pos += control_height + section_spacing_y;
+
 
             // Create Ingredient UI Elements.
             int ing_x_start = (dialog_client_width - ingredient_row_total_width) / 2;
@@ -422,6 +440,15 @@ INT_PTR CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
                     } else {
                         MessageBox(hDlg, "No save file loaded or valid data to modify!", "Error", MB_ICONWARNING | MB_OK);
                         LogMessage(LOG_INFO_LEVEL, "Attempted to set max artisan's flame without a loaded save file.");
+                    }
+                    break;
+                case IDC_BTN_MAX_FOLLOWER:
+                    LogMessage(LOG_INFO_LEVEL, "Max Follower Count button clicked.");
+                    if (g_saveGameManager.IsSaveFileLoaded()) {
+                        g_saveGameManager.SetFollowerCount(99999);
+                        UpdateCurrencyDisplay();
+                    } else {
+                        MessageBox(hDlg, "No save file loaded or valid data to modify!", "Error", MB_ICONWARNING | MB_OK);
                     }
                     break;
                 case IDC_BTN_MAX_OWN_INGREDIENTS:
