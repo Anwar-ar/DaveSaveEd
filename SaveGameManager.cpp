@@ -532,9 +532,6 @@ void SaveGameManager::MaxOwnIngredients(sqlite3* db) {
     sqlite3_finalize(stmt_material); // Clean up the prepared statement once after the loop
     LogMessage(LOG_INFO_LEVEL, ("MaxOwnMaterial: Updated " + std::to_string(updated_count) + " owned material. Skipped " + std::to_string(skipped_count) + " material.").c_str());
 
-    DumpSaveDataToFile(m_saveData);
-    DumpSQLiteToText(db, "db_dump.txt");
-
     // Max All Staff Level
     if (m_isSaveFileLoaded && m_saveData.contains("Staff")) {
         nlohmann::json& hired_staff_json_map = m_saveData["Staff"];
@@ -548,6 +545,9 @@ void SaveGameManager::MaxOwnIngredients(sqlite3* db) {
             it.value()["level"] = 20;
         }
     } 
+    
+    DumpSaveDataToFile(m_saveData);
+    DumpSQLiteToText(db, "db_dump.txt");
 }
 
 // --- SQLite Callback for batch querying ingredients (for MaxAllIngredients) ---
