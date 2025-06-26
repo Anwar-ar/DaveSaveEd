@@ -343,6 +343,30 @@ static int GetDesiredMaxCountForTier(int item_db_max_count) {
     }
 }
 
+// Save JSON to file named save_dump.txt
+void DumpSaveDataToFile(const nlohmann::json& m_saveData) {
+    // Get the directory where the executable is running
+    std::filesystem::path exePath = std::filesystem::current_path();
+    std::filesystem::path outputPath = exePath / "save_dump.txt";
+
+    try {
+        // Open file in truncate mode (overwrite if it exists)
+        std::ofstream outFile(outputPath, std::ios::out | std::ios::trunc);
+        if (!outFile) {
+            LogMessage(LOG_ERROR_LEVEL, "Failed to open save_dump.txt for writing.");
+            return;
+        }
+
+        // Write formatted JSON
+        outFile << m_saveData.dump(4);  // 4 = indent size
+        outFile.close();
+
+        LogMessage(LOG_INFO_LEVEL, "Successfully wrote save data to save_dump.txt");
+    } catch (const std::exception& ex) {
+        LogMessage(LOG_ERROR_LEVEL, ex.what());
+    }
+}
+
 // --- MaxOwnIngredients Implementation ---
 void SaveGameManager::MaxOwnIngredients(sqlite3* db) {
     if (!m_isSaveFileLoaded || !m_saveData.contains("Ingredients") || !m_saveData["Ingredients"].is_object()) {
@@ -355,11 +379,7 @@ void SaveGameManager::MaxOwnIngredients(sqlite3* db) {
     }
 
     nlohmann::json& ingredients_json_map = m_saveData["Ingredients"];
-    if (m_saveData.is_null() || m_saveData.empty()) {
-        LogMessage(LOG_WARNING_LEVEL, "m_saveData is null or empty.");
-    } else {
-        LogMessage(LOG_WARNING_LEVEL, m_saveData.dump().c_str());
-    }
+    DumpSaveDataToFile(m_saveData);
     int updated_count = 0;
     int skipped_count = 0; // Counter for items skipped due to rules or issues
 
