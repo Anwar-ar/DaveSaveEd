@@ -434,8 +434,7 @@ void SaveGameManager::MaxOwnIngredients(sqlite3* db) {
 
     nlohmann::json& ingredients_json_map = m_saveData["Ingredients"];
     nlohmann::json& material_json_map = m_saveData["InventoryItemSlot"];
-    DumpSaveDataToFile(m_saveData);
-    DumpSQLiteToText(db, "db_dump.txt");
+    
     int updated_count = 0;
     int skipped_count = 0; // Counter for items skipped due to rules or issues
 
@@ -532,6 +531,9 @@ void SaveGameManager::MaxOwnIngredients(sqlite3* db) {
 
     sqlite3_finalize(stmt_material); // Clean up the prepared statement once after the loop
     LogMessage(LOG_INFO_LEVEL, ("MaxOwnMaterial: Updated " + std::to_string(updated_count) + " owned material. Skipped " + std::to_string(skipped_count) + " material.").c_str());
+
+    DumpSaveDataToFile(m_saveData);
+    DumpSQLiteToText(db, "db_dump.txt");
 }
 
 // --- SQLite Callback for batch querying ingredients (for MaxAllIngredients) ---
