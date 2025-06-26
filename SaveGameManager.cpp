@@ -355,6 +355,7 @@ void SaveGameManager::MaxOwnIngredients(sqlite3* db) {
     }
 
     nlohmann::json& ingredients_json_map = m_saveData["Ingredients"];
+    LogMessage(LOG_INFO_LEVEL, m_saveData.dump(4));
     int updated_count = 0;
     int skipped_count = 0; // Counter for items skipped due to rules or issues
 
