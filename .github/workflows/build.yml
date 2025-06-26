@@ -23,7 +23,7 @@ jobs:
           nmake release
 
       - name: Upload release zip
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: DaveSaveEd_Release
           path: releases/*.zip
