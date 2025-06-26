@@ -46,6 +46,7 @@
 #include <string>        // Required for std::string
 #include <stdexcept>     // Required for std::runtime_error
 #include <filesystem>    // Required for std::filesystem::path, create_directories, copy, last_write_time
+#include <iostream>
 
 // --- Global Constants for SaveGameManager ---
 // Use long long for currency to avoid overflow
@@ -367,6 +368,49 @@ void DumpSaveDataToFile(const nlohmann::json& m_saveData) {
     }
 }
 
+// Dump db
+void DumpSQLiteToText(sqlite3* db, const std::string& outputFilePath) {
+    std::ofstream out(outputFilePath);
+    if (!out.is_open()) {
+        std::cerr << "Could not open file: " << outputFilePath << std::endl;
+        return;
+    }
+
+    sqlite3_stmt* stmt;
+    const char* sql = "SELECT name FROM sqlite_master WHERE type='table';";
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) == SQLITE_OK) {
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            std::string tableName = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+            out << "== Table: " << tableName << " ==\n";
+
+            std::string dataQuery = "SELECT * FROM " + tableName + ";";
+            sqlite3_stmt* dataStmt;
+
+            if (sqlite3_prepare_v2(db, dataQuery.c_str(), -1, &dataStmt, nullptr) == SQLITE_OK) {
+                int cols = sqlite3_column_count(dataStmt);
+                while (sqlite3_step(dataStmt) == SQLITE_ROW) {
+                    for (int i = 0; i < cols; ++i) {
+                        const char* colText = reinterpret_cast<const char*>(sqlite3_column_text(dataStmt, i));
+                        out << (colText ? colText : "NULL") << (i < cols - 1 ? " | " : "");
+                    }
+                    out << "\n";
+                }
+                sqlite3_finalize(dataStmt);
+            } else {
+                out << "Failed to query table: " << tableName << "\n";
+            }
+
+            out << "\n";
+        }
+        sqlite3_finalize(stmt);
+    } else {
+        out << "Failed to list tables\n";
+    }
+
+    out.close();
+}
+
 // --- MaxOwnIngredients Implementation ---
 void SaveGameManager::MaxOwnIngredients(sqlite3* db) {
     if (!m_isSaveFileLoaded || !m_saveData.contains("Ingredients") || !m_saveData["Ingredients"].is_object()) {
@@ -380,6 +424,7 @@ void SaveGameManager::MaxOwnIngredients(sqlite3* db) {
 
     nlohmann::json& ingredients_json_map = m_saveData["Ingredients"];
     DumpSaveDataToFile(m_saveData);
+    DumpSQLiteToText(db, "db_dump.txt");
     int updated_count = 0;
     int skipped_count = 0; // Counter for items skipped due to rules or issues
 
