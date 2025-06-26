@@ -433,6 +433,7 @@ void SaveGameManager::MaxOwnIngredients(sqlite3* db) {
     }
 
     nlohmann::json& ingredients_json_map = m_saveData["Ingredients"];
+    nlohmann::json& material_json_map = m_saveData["InventoryItemSlot"];
     DumpSaveDataToFile(m_saveData);
     DumpSQLiteToText(db, "db_dump.txt");
     int updated_count = 0;
@@ -484,6 +485,53 @@ void SaveGameManager::MaxOwnIngredients(sqlite3* db) {
 
     sqlite3_finalize(stmt); // Clean up the prepared statement once after the loop
     LogMessage(LOG_INFO_LEVEL, ("MaxOwnIngredients: Updated " + std::to_string(updated_count) + " owned ingredients. Skipped " + std::to_string(skipped_count) + " ingredients.").c_str());
+
+    // SQL to get MaxCount for an Item ID
+    sqlite3_stmt *stmt_material = nullptr; // Prepare statement once outside the loop
+    std::string sql_material = "SELECT MaxCount FROM Items WHERE TID = ?;";
+    int rc_prepare_material = sqlite3_prepare_v2(db, sql_material.c_str(), -1, &stmt_material, NULL);
+    if (rc_prepare_material != SQLITE_OK) {
+        LogMessage(LOG_ERROR_LEVEL, ("SQL prepare failed for MaxOwnMaterial: " + std::string(sqlite3_errmsg(db))).c_str());
+        return; // Exit if prepare fails
+    }
+
+    for (auto it = material_json_map.begin(); it != material_json_map.end(); ++it) {
+        // Ensure "ItemID" exists and is an integer
+        if (it.value().contains("itemID") && it.value()["itemID"].is_number_integer()) {
+            int material_id = it.value()["itemID"].get<int>();
+
+            sqlite3_reset(stmt_material); // Reset statement for reuse in each iteration
+            sqlite3_bind_int(stmt_material, 1, material_id);
+
+            int max_count_from_db = 0; // Initialize to 0; will be retrieved from DB
+            if (sqlite3_step(stmt_material) == SQLITE_ROW) {
+                max_count_from_db = sqlite3_column_int(stmt_material, 0);
+            } else {
+                LogMessage(LOG_WARNING_LEVEL, ("MaxCount not found for existing ingredient ID: " + std::to_string(material_id) + " in Items table. Skipping update.").c_str());
+                skipped_count++; // Count as skipped due to DB lookup failure
+                continue; // Skip to next if item data not found
+            }
+
+            // Determine the target count based on the item's MaxCount from DB
+            int target_count = GetDesiredMaxCountForTier(max_count_from_db);
+
+            if (target_count > 0) { // target_count == 0 indicates skipping
+                // Update the count to the determined target
+                it.value()["totalCount"] = target_count;
+                updated_count++;
+            } else {
+                // Item should be skipped (e.g., MaxCount == 1 or unhandled tier)
+                LogMessage(LOG_INFO_LEVEL, ("Skipping owned TID " + std::to_string(material_id) + " with MaxCount " + std::to_string(max_count_from_db) + " as per tier rules.").c_str());
+                skipped_count++;
+            }
+        } else {
+            LogMessage(LOG_WARNING_LEVEL, ("Skipping ingredient entry without valid 'TID': " + it.key() + ". Malformed entry.").c_str());
+            skipped_count++; // Count as skipped due to invalid JSON structure
+        }
+    }
+
+    sqlite3_finalize(stmt_material); // Clean up the prepared statement once after the loop
+    LogMessage(LOG_INFO_LEVEL, ("MaxOwnMaterial: Updated " + std::to_string(updated_count) + " owned material. Skipped " + std::to_string(skipped_count) + " material.").c_str());
 }
 
 // --- SQLite Callback for batch querying ingredients (for MaxAllIngredients) ---
