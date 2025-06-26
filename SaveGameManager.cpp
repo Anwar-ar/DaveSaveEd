@@ -389,6 +389,15 @@ void DumpSQLiteToText(sqlite3* db, const std::string& outputFilePath) {
 
             if (sqlite3_prepare_v2(db, dataQuery.c_str(), -1, &dataStmt, nullptr) == SQLITE_OK) {
                 int cols = sqlite3_column_count(dataStmt);
+
+                // 🆕 Write column headers before any rows
+                for (int i = 0; i < cols; ++i) {
+                    const char* colName = sqlite3_column_name(dataStmt, i);
+                    out << (colName ? colName : "NULL") << (i < cols - 1 ? " | " : "");
+                }
+                out << "\n";
+
+                // Write each row of data
                 while (sqlite3_step(dataStmt) == SQLITE_ROW) {
                     for (int i = 0; i < cols; ++i) {
                         const char* colText = reinterpret_cast<const char*>(sqlite3_column_text(dataStmt, i));
@@ -396,6 +405,7 @@ void DumpSQLiteToText(sqlite3* db, const std::string& outputFilePath) {
                     }
                     out << "\n";
                 }
+
                 sqlite3_finalize(dataStmt);
             } else {
                 out << "Failed to query table: " << tableName << "\n";
