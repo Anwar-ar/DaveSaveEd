@@ -1,0 +1,29 @@
+name: Build DaveSaveEd Release
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up MSVC Developer Command Prompt
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Build project with NMake
+        run: |
+          nmake clean
+          nmake release
+
+      - name: Upload release zip
+        uses: actions/upload-artifact@v3
+        with:
+          name: DaveSaveEd_Release
+          path: releases/*.zip
