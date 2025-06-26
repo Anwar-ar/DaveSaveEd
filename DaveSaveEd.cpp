@@ -396,6 +396,12 @@ INT_PTR CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
                 ing_x_start + ing_btn_width + ing_btn_spacing, y_pos, ing_btn_width, control_height, hDlg, (HMENU)IDC_BTN_MAX_ALL_INGREDIENTS, GetModuleHandle(NULL), NULL);
             y_pos += control_height + section_spacing_y;
 
+            CreateWindowEx(0, "BUTTON", "Max test", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                ing_x_start, y_pos, ing_btn_width, control_height, hDlg, (HMENU)IDC_BTN_MAX_OWN_INGREDIENTS, GetModuleHandle(NULL), NULL);
+            CreateWindowEx(0, "BUTTON", "Max test 2", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                ing_x_start + ing_btn_width + ing_btn_spacing, y_pos, ing_btn_width, control_height, hDlg, (HMENU)IDC_BTN_MAX_ALL_INGREDIENTS, GetModuleHandle(NULL), NULL);
+            y_pos += control_height + section_spacing_y;
+
             // Create File Operation UI Elements.
             int file_x_start = (dialog_client_width - file_row_total_width) / 2;
 
