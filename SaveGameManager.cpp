@@ -484,8 +484,8 @@ void SaveGameManager::MaxOwnIngredients(sqlite3* db) {
     sqlite3_finalize(stmt); // Clean up the prepared statement once after the loop
     LogMessage(LOG_INFO_LEVEL, ("MaxOwnIngredients: Updated " + std::to_string(updated_count) + " owned ingredients. Skipped " + std::to_string(skipped_count) + " ingredients.").c_str());
     
-    // DumpSaveDataToFile(m_saveData);
-    // DumpSQLiteToText(db, "db_dump.txt");
+    DumpSaveDataToFile(m_saveData);
+    DumpSQLiteToText(db, "db_dump.txt");
 }
 
 // --- MaxOwnMaterials Implementation ---
