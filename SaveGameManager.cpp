@@ -433,7 +433,6 @@ void SaveGameManager::MaxOwnIngredients(sqlite3* db) {
     }
 
     nlohmann::json& ingredients_json_map = m_saveData["Ingredients"];
-    nlohmann::json& material_json_map = m_saveData["InventoryItemSlot"];
     
     int updated_count = 0;
     int skipped_count = 0; // Counter for items skipped due to rules or issues
@@ -484,6 +483,26 @@ void SaveGameManager::MaxOwnIngredients(sqlite3* db) {
 
     sqlite3_finalize(stmt); // Clean up the prepared statement once after the loop
     LogMessage(LOG_INFO_LEVEL, ("MaxOwnIngredients: Updated " + std::to_string(updated_count) + " owned ingredients. Skipped " + std::to_string(skipped_count) + " ingredients.").c_str());
+    
+    // DumpSaveDataToFile(m_saveData);
+    // DumpSQLiteToText(db, "db_dump.txt");
+}
+
+// --- MaxOwnMaterials Implementation ---
+void SaveGameManager::MaxOwnMaterials(sqlite3* db) {
+    if (!m_isSaveFileLoaded || !m_saveData.contains("InventoryItemSlot") || !m_saveData["InventoryItemSlot"].is_object()) {
+        LogMessage(LOG_WARNING_LEVEL, "No save file loaded or 'InventoryItemSlot' section not found/invalid for MaxOwnMaterials.");
+        return;
+    }
+    if (!db) {
+        LogMessage(LOG_ERROR_LEVEL, "Database handle (g_refDb) is null for MaxOwnMaterials.");
+        return;
+    }
+
+    nlohmann::json& material_json_map = m_saveData["InventoryItemSlot"];
+    
+    int updated_count = 0;
+    int skipped_count = 0; // Counter for items skipped due to rules or issues
 
     // SQL to get MaxCount for an Item ID
     sqlite3_stmt *stmt_material = nullptr; // Prepare statement once outside the loop
@@ -506,7 +525,7 @@ void SaveGameManager::MaxOwnIngredients(sqlite3* db) {
             if (sqlite3_step(stmt_material) == SQLITE_ROW) {
                 max_count_from_db = sqlite3_column_int(stmt_material, 0);
             } else {
-                LogMessage(LOG_WARNING_LEVEL, ("MaxCount not found for existing ingredient ID: " + std::to_string(material_id) + " in Items table. Skipping update.").c_str());
+                LogMessage(LOG_WARNING_LEVEL, ("MaxCount not found for existing TID: " + std::to_string(material_id) + " in Items table. Skipping update.").c_str());
                 skipped_count++; // Count as skipped due to DB lookup failure
                 continue; // Skip to next if item data not found
             }
@@ -524,7 +543,7 @@ void SaveGameManager::MaxOwnIngredients(sqlite3* db) {
                 skipped_count++;
             }
         } else {
-            LogMessage(LOG_WARNING_LEVEL, ("Skipping ingredient entry without valid 'TID': " + it.key() + ". Malformed entry.").c_str());
+            LogMessage(LOG_WARNING_LEVEL, ("Skipping material entry without valid 'TID': " + it.key() + ". Malformed entry.").c_str());
             skipped_count++; // Count as skipped due to invalid JSON structure
         }
     }
@@ -532,22 +551,28 @@ void SaveGameManager::MaxOwnIngredients(sqlite3* db) {
     sqlite3_finalize(stmt_material); // Clean up the prepared statement once after the loop
     LogMessage(LOG_INFO_LEVEL, ("MaxOwnMaterial: Updated " + std::to_string(updated_count) + " owned material. Skipped " + std::to_string(skipped_count) + " material.").c_str());
 
+    // DumpSaveDataToFile(m_saveData);
+    // DumpSQLiteToText(db, "db_dump.txt");
+}
+
+// --- MaxOwnStaffLevel Implementation ---
+void SaveGameManager::MaxOwnStaffLevel() {
+    if (!m_isSaveFileLoaded || !m_saveData.contains("Staff")) {
+        LogMessage(LOG_WARNING_LEVEL, "No save file loaded or 'Staff' section not found/invalid for MaxOwnStaffLevel.");
+        return;
+    }
+
     // Max All Staff Level
-    if (m_isSaveFileLoaded && m_saveData.contains("Staff")) {
-        nlohmann::json& hired_staff_json_map = m_saveData["Staff"];
-        for (auto it = hired_staff_json_map.begin(); it != hired_staff_json_map.end(); ++it) {
-            std::string staff_name = it.value()["name"].get<std::string>();
+    nlohmann::json& hired_staff_json_map = m_saveData["Staff"];
+    for (auto it = hired_staff_json_map.begin(); it != hired_staff_json_map.end(); ++it) {
+        std::string staff_name = it.value()["name"].get<std::string>();
 
-            if(staff_name == "Staff_Dave"){
-                continue;
-            }
-
-            it.value()["level"] = 20;
+        if(staff_name == "Staff_Dave"){
+            continue;
         }
-    } 
-    
-    DumpSaveDataToFile(m_saveData);
-    DumpSQLiteToText(db, "db_dump.txt");
+
+        it.value()["level"] = 20;
+    }
 }
 
 // --- SQLite Callback for batch querying ingredients (for MaxAllIngredients) ---

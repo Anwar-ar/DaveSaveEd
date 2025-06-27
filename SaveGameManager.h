@@ -63,6 +63,8 @@ public:
     // Ingredient Modification Functions (these are new or will be expanded)
     void MaxOwnIngredients(sqlite3* db); // Needs access to the database
     void MaxAllIngredients(sqlite3* db); // Needs access to the database
+    void MaxOwnMaterials(sqlite3* db); // Needs access to the database
+    void MaxOwnStaffLevel(); // Needs access to the database
 
     // Static helper to find save directory (already exists)
     static std::filesystem::path GetDefaultSaveGameDirectoryAndLatestFile(std::string& latestSaveFileName);

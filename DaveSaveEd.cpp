@@ -79,6 +79,9 @@
 #define IDC_BTN_LOAD_SAVE           112
 #define IDC_BTN_WRITE_SAVE          113
 
+#define IDC_BTN_MAX_OWN_MATERIALS 114
+#define IDC_BTN_MAX_LEVEL_OWN_STAFF 115
+
 // --- Global Window Handles ---
 HWND g_hDlg = NULL; // Handle to the main dialog window.
 
@@ -396,10 +399,10 @@ INT_PTR CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
                 ing_x_start + ing_btn_width + ing_btn_spacing, y_pos, ing_btn_width, control_height, hDlg, (HMENU)IDC_BTN_MAX_ALL_INGREDIENTS, GetModuleHandle(NULL), NULL);
             y_pos += control_height + section_spacing_y;
 
-            CreateWindowEx(0, "BUTTON", "Max test", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                ing_x_start, y_pos, ing_btn_width, control_height, hDlg, (HMENU)IDC_BTN_MAX_OWN_INGREDIENTS, GetModuleHandle(NULL), NULL);
-            CreateWindowEx(0, "BUTTON", "Max test 2", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                ing_x_start + ing_btn_width + ing_btn_spacing, y_pos, ing_btn_width, control_height, hDlg, (HMENU)IDC_BTN_MAX_ALL_INGREDIENTS, GetModuleHandle(NULL), NULL);
+            CreateWindowEx(0, "BUTTON", "Max Own Material", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                ing_x_start, y_pos, ing_btn_width, control_height, hDlg, (HMENU)IDC_BTN_MAX_OWN_MATERIALS, GetModuleHandle(NULL), NULL);
+            CreateWindowEx(0, "BUTTON", "Max Level Own Staff", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                ing_x_start + ing_btn_width + ing_btn_spacing, y_pos, ing_btn_width, control_height, hDlg, (HMENU)IDC_BTN_MAX_LEVEL_OWN_STAFF, GetModuleHandle(NULL), NULL);
             y_pos += control_height + section_spacing_y;
 
             // Create File Operation UI Elements.
@@ -471,6 +474,24 @@ INT_PTR CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
                     if (g_saveGameManager.IsSaveFileLoaded()) {
                         g_saveGameManager.MaxAllIngredients(g_refDb); // Pass reference DB for ingredient data.
                         // Update UI if any changes are visible.
+                    } else {
+                        MessageBox(hDlg, "No save file loaded or valid data to modify!", "Error", MB_ICONWARNING | MB_OK);
+                    }
+                    break;
+                case IDC_BTN_MAX_OWN_MATERIALS:
+                    LogMessage(LOG_INFO_LEVEL, "Max Own Material button clicked.");
+                    if (g_saveGameManager.IsSaveFileLoaded()) {
+                        g_saveGameManager.MaxOwnMaterials(g_refDb); // Pass the reference DB
+                        // Update UI if any changes are visible (e.g., if ingredient counts were displayed).
+                    } else {
+                        MessageBox(hDlg, "No save file loaded or valid data to modify!", "Error", MB_ICONWARNING | MB_OK);
+                    }
+                    break;
+                case IDC_BTN_MAX_LEVEL_OWN_STAFF:
+                    LogMessage(LOG_INFO_LEVEL, "Max Own Staff Level button clicked.");
+                    if (g_saveGameManager.IsSaveFileLoaded()) {
+                        g_saveGameManager.MaxOwnStaffLevel(); // Pass the reference DB
+                        // Update UI if any changes are visible (e.g., if ingredient counts were displayed).
                     } else {
                         MessageBox(hDlg, "No save file loaded or valid data to modify!", "Error", MB_ICONWARNING | MB_OK);
                     }
