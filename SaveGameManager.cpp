@@ -466,7 +466,7 @@ void SaveGameManager::MaxOwnIngredients(sqlite3* db) {
             // Determine the target count based on the item's MaxCount from DB
             int target_count = GetDesiredMaxCountForTier(max_count_from_db);
 
-            if (target_count > 0) { // target_count == 0 indicates skipping
+            if (target_count > 0 && it.value()["count"] > 0 && it.value()["count"] < target_count) { // target_count == 0 indicates skipping
                 // Update the count to the determined target
                 it.value()["count"] = target_count;
                 updated_count++;
@@ -533,7 +533,7 @@ void SaveGameManager::MaxOwnMaterials(sqlite3* db) {
             // Determine the target count based on the item's MaxCount from DB
             int target_count = GetDesiredMaxCountForTier(max_count_from_db);
 
-            if (target_count > 0) { // target_count == 0 indicates skipping
+            if (target_count > 0 && it.value()["totalCount"] > 0 && it.value()["totalCount"] < target_count) { // target_count == 0 indicates skipping
                 // Update the count to the determined target
                 it.value()["totalCount"] = target_count;
                 updated_count++;
@@ -570,8 +570,9 @@ void SaveGameManager::MaxOwnStaffLevel() {
         if(staff_name == "Staff_Dave"){
             continue;
         }
-
-        it.value()["level"] = 20;
+        if(it.value()["level"] < 20){
+            it.value()["level"] = 20;
+        }
     }
 }
 
