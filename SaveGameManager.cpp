@@ -458,6 +458,7 @@ void SaveGameManager::MaxOwnIngredients(sqlite3* db) {
             if (sqlite3_step(stmt) == SQLITE_ROW) {
                 max_count_from_db = sqlite3_column_int(stmt, 0);
             } else {
+                it.value()["count"] = 1;
                 LogMessage(LOG_WARNING_LEVEL, ("MaxCount not found for existing ingredient ID: " + std::to_string(ingredients_id) + " in Items table. Skipping update.").c_str());
                 skipped_count++; // Count as skipped due to DB lookup failure
                 continue; // Skip to next if item data not found
@@ -466,7 +467,7 @@ void SaveGameManager::MaxOwnIngredients(sqlite3* db) {
             // Determine the target count based on the item's MaxCount from DB
             int target_count = GetDesiredMaxCountForTier(max_count_from_db);
 
-            if (target_count > 0 && it.value()["count"] > 0 && it.value()["count"] < target_count) { // target_count == 0 indicates skipping
+            if (target_count > 0 && it.value()["count"] < target_count) { // target_count == 0 indicates skipping
                 // Update the count to the determined target
                 it.value()["count"] = target_count;
                 updated_count++;
@@ -525,6 +526,7 @@ void SaveGameManager::MaxOwnMaterials(sqlite3* db) {
             if (sqlite3_step(stmt_material) == SQLITE_ROW) {
                 max_count_from_db = sqlite3_column_int(stmt_material, 0);
             } else {
+                it.value()["totalCount"] = 1;
                 LogMessage(LOG_WARNING_LEVEL, ("MaxCount not found for existing TID: " + std::to_string(material_id) + " in Items table. Skipping update.").c_str());
                 skipped_count++; // Count as skipped due to DB lookup failure
                 continue; // Skip to next if item data not found
@@ -533,7 +535,7 @@ void SaveGameManager::MaxOwnMaterials(sqlite3* db) {
             // Determine the target count based on the item's MaxCount from DB
             int target_count = GetDesiredMaxCountForTier(max_count_from_db);
 
-            if (target_count > 0 && it.value()["totalCount"] > 0 && it.value()["totalCount"] < target_count) { // target_count == 0 indicates skipping
+            if (target_count > 0 && it.value()["totalCount"] < target_count) { // target_count == 0 indicates skipping
                 // Update the count to the determined target
                 it.value()["totalCount"] = target_count;
                 updated_count++;
